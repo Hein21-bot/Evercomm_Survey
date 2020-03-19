@@ -19,10 +19,12 @@ const mypool = mysql.createConnection({
 const login = (email, password) => {
   query = util.promisify(mypool.query).bind(mypool)
   return query(`SELECT * FROM tbl_login_users WHERE active = 1 AND email = '${email}' AND password = trim('${password}');
-  select * from tbl_questions as q left join tbl_survey_headers as h on q.survey_headers_id = h.survey_header_id order by q.survey_headers_id;
-  select * from tbl_answers as a where users_id = (select l.login_user_id from tbl_login_users as l where l.email = '${email}') order by 
-  a.survey_headers_id;`)
+`)
 }
+
+// select * from tbl_questions as q left join tbl_survey_headers as h on q.survey_headers_id = h.survey_header_id order by q.survey_headers_id;
+//   select * from tbl_answers as a where users_id = (select l.login_user_id from tbl_login_users as l where l.email = '${email}') order by 
+//   a.survey_headers_id;
 
 // email
 
@@ -178,10 +180,10 @@ const updateOptionGroup = (option_group_id, optionGroupName) => {
 
 // answers
 
-const addAnswer = (other, optionChoiceId, userId, questionId,survey_headers_id) => {
+const addAnswer = (other, optionChoiceId, userId, questionId, survey_headers_id) => {
   query = util.promisify(mypool.query).bind(mypool)
   return query(`INSERT INTO tbl_answers(other, option_choices_id, users_id, questions_id,survey_headers_id) VALUES(?,?,?,?,?)`,
-    [other, optionChoiceId, userId, questionId,survey_headers_id])
+    [other, optionChoiceId, userId, questionId, survey_headers_id])
 }
 
 const deleteAnswer = (userId) => {
@@ -235,9 +237,13 @@ const updateQuestion = (question_id, questionName, required, isOther, optionGrou
 
 const AnswerCount = (email) => {
   query = util.promisify(mypool.query).bind(mypool)
-  return query('SELECT COUNT(questions_id.*) FROM tbl_answers JOIN tbl_login_users tbl_login_users ON tbl_answers.users_id = tbl_login_users.login_user_id where email = "' + email + '" GROUP BY questions_id;')
+  return query(`SELECT * FROM tbl_login_users WHERE active = 1 AND email = '${email}';
+  select * from tbl_questions as q left join tbl_survey_headers as h on q.survey_headers_id = h.survey_header_id order by q.survey_headers_id;
+   SELECT COUNT(distinct questions_id) as answerCount, survey_headers_id FROM tbl_answers JOIN tbl_login_users tbl_login_users ON tbl_answers.users_id = tbl_login_users.login_user_id where email = '${email}'
+    group by survey_headers_id`)
 }
 
+// SELECT COUNT(distinct questions_id) as answerCount FROM tbl_answers JOIN tbl_login_users tbl_login_users ON tbl_answers.users_id = tbl_login_users.login_user_id where email = "' + email + '"
 
 module.exports = {
   getQuestion, login, isExistAdmin, addAdmin, updateAdmin, getAdmin, getAdminById, addUser, checkDuplicateEmail,
